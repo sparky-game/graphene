@@ -31,14 +31,16 @@ namespace gph {
   concept ValidEntity = std::is_base_of_v<Entity, T> and std::is_convertible_v<T*, Entity*>;
 
   struct SceneManager;  // Forward declaration
+  struct AssetManager;  // Forward declaration
 
   /**
    * @brief ...
    */
   struct Scene {
-    explicit Scene(SceneManager &s_mgr, cbn::DrawCanvas &dc)
+    explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, const AssetManager &a_mgr)
       : r_Canvas{dc},
         r_SceneMgr{s_mgr},
+        r_AssetMgr{a_mgr},
         m_Entities{typeof(m_Entities)::make()}
     {}
 
@@ -70,6 +72,7 @@ namespace gph {
   protected:
     cbn::DrawCanvas &r_Canvas;
     SceneManager &r_SceneMgr;
+    const AssetManager &r_AssetMgr;
 
     template <ValidEntity E, typename... Args>
     E &NewEntity(Args &&... args) {
@@ -105,18 +108,18 @@ namespace gph {
       if (m_Next) delete m_Next;
     }
 
-    void Update(const f64 dt) {
+    void Update(const f64 dt) const {
       if (m_Current) m_Current->UpdateAll(dt);
     }
 
-    void Render(void) {
+    void Render(void) const {
       if (m_Current) m_Current->RenderAll();
     }
 
     template <ValidScene S>
-    void Switch(cbn::DrawCanvas &dc) {
+    void Switch(cbn::DrawCanvas &dc, const AssetManager &a_mgr) {
       if (m_Next) delete m_Next;
-      m_Next = new S{*this, dc};
+      m_Next = new S{dc, *this, a_mgr};
     }
 
     void Process(void) {
@@ -138,11 +141,51 @@ namespace gph {
   /**
    * @brief ...
    */
-  struct Game final {
-    explicit Game(usz width, usz height, const char *title)
-      : m_Canvas{cbn::DrawCanvas::make(width, height)}
+  struct AssetManager final {
+    explicit AssetManager(const char *ap_path)
+      : m_AssetPack{cbn::SKAP::make(ap_path)}
     {
-      cbn::win::Open(m_Canvas, title);
+      if (!m_AssetPack) CARBON_UNREACHABLE;
+      cbn::sprite_mgr::Init();
+      cbn::audio::Init();
+    }
+
+    AssetManager(const AssetManager &) = delete;
+    AssetManager(AssetManager &&) = delete;
+    AssetManager &operator=(const AssetManager &) = delete;
+    AssetManager &operator=(AssetManager &&) = delete;
+
+    ~AssetManager(void) {
+      cbn::audio::Shutdown();
+      cbn::sprite_mgr::Shutdown();
+      m_AssetPack->Free();
+    }
+
+    auto LoadSprite(const char *name) const {
+      auto s = m_AssetPack->LoadSprite(name);
+      if (!s) CARBON_UNREACHABLE;
+      return *s;
+    }
+
+  private:
+    cbn::Opt<cbn::SKAP> m_AssetPack;
+  };
+
+  /**
+   * @brief ...
+   */
+  struct Game final {
+    struct Spec {
+      usz width, height;
+      const char *title;
+      const char *ap_path;
+    };
+
+    explicit Game(const Spec &s)
+      : m_Canvas{cbn::DrawCanvas::make(s.width, s.height)},
+        m_AssetMgr{s.ap_path}
+    {
+      cbn::win::Open(m_Canvas, s.title);
     }
 
     Game(const Game &) = delete;
@@ -157,7 +200,7 @@ namespace gph {
 
     template <ValidScene S>
     void InitScene(void) {
-      m_SceneMgr.Switch<S>(m_Canvas);
+      m_SceneMgr.Switch<S>(m_Canvas, m_AssetMgr);
     }
 
     void Run(void) {
@@ -173,5 +216,9 @@ namespace gph {
   private:
     cbn::DrawCanvas m_Canvas;
     SceneManager m_SceneMgr;
+    AssetManager m_AssetMgr;
   };
 }
+
+// TODO: change SceneManager to use a stack.
+// TODO: implement GameContext.
