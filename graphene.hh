@@ -161,7 +161,7 @@ namespace gph {
       m_AssetPack->Free();
     }
 
-    auto LoadSprite(const char *name) const {
+    cbn::sprite_mgr::UID LoadSprite(const char *name) const {
       auto s = m_AssetPack->LoadSprite(name);
       if (!s) CARBON_UNREACHABLE;
       return *s;
