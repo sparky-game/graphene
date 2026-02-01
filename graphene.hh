@@ -1,9 +1,53 @@
+/*
+  Game engine C++ header-only library. MIT. See license statements at the end of this file.
+  graphene - v0.1-alpha - YYYY-MM-DD
+
+  Wasym Atieh Alonso - wasymatieh01@gmail.com
+
+  Website: https://sparky-game.org/software/graphene
+  GitHub:  https://github.com/sparky-game/graphene
+*/
+
+/*
+  1. Introduction
+  ===============
+  (...)
+
+  2. Building
+  ===========
+  (...)
+
+  3. Definitions
+  ==============
+  This section defines common terms used throughout graphene.
+  (...)
+
+  4. Folder structure suggestion
+  ==============================
+  Assets
+  +---Art
+  | +---Sprites
+  | +---Meshes
+  | \---Fonts
+  +---Audio
+  | +---Music
+  | \---Sound
+  Code
+  +---Data
+  +---Entities
+  \---Scenes
+*/
+
 // SPDX-License-Identifier: MIT
 // Copyright (C) Wasym A. Alonso. All Rights Reserved.
 
 #pragma once
 
 #include <carbon.h>
+
+#if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != 17
+#error Carbon v0.17 is needed
+#endif
 
 namespace gph {
   /**
@@ -243,5 +287,26 @@ namespace gph {
   };
 }
 
-// TODO: change SceneManager to use a stack.
-// TODO: implement GameContext.
+/*
+  This software is availabe under the MIT license:
+  ================================================
+  Copyright (C) Wasym A. Alonso
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
