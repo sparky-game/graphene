@@ -30,6 +30,20 @@ namespace gph {
   template <typename T>
   concept ValidEntity = std::is_base_of_v<Entity, T> and std::is_convertible_v<T*, Entity*>;
 
+  /**
+   * @brief ...
+   */
+  namespace RenderLayer {
+    enum T {
+      Background,
+      Foreground,
+      UI,
+      Count
+    };
+    template <T Layer>
+    concept Valid = Layer != Count;
+  };
+
   struct SceneManager;  // Forward declaration
   struct AssetManager;  // Forward declaration
 
@@ -40,9 +54,12 @@ namespace gph {
     explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, const AssetManager &a_mgr)
       : r_Canvas{dc},
         r_SceneMgr{s_mgr},
-        r_AssetMgr{a_mgr},
-        m_Entities{typeof(m_Entities)::make()}
-    {}
+        r_AssetMgr{a_mgr}
+    {
+      for (auto &l : m_Entities) {
+        l = typeof(m_Entities)::value_type::make();
+      }
+    }
 
     Scene(const Scene &) = delete;
     Scene(Scene &&) = delete;
@@ -50,8 +67,10 @@ namespace gph {
     Scene &operator=(Scene &&) = delete;
 
     virtual ~Scene(void) {
-      for (auto e : m_Entities) delete e;
-      m_Entities.Free();
+      for (auto &l : m_Entities) {
+        for (auto e : l) delete e;
+        l.Free();
+      }
     }
 
     virtual void OnEnter(void) {}
@@ -61,12 +80,16 @@ namespace gph {
 
     void UpdateAll(const f64 dt) {
       Update(dt);
-      for (auto e : m_Entities) e->Update(dt);
+      for (const auto &l : m_Entities) {
+        for (auto e : l) e->Update(dt);
+      }
     }
 
     void RenderAll(void) const {
       Render();
-      for (auto e : m_Entities) e->Render(r_Canvas);
+      for (const auto &l : m_Entities) {
+        for (auto e : l) e->Render(r_Canvas);
+      }
     }
 
   protected:
@@ -74,15 +97,16 @@ namespace gph {
     SceneManager &r_SceneMgr;
     const AssetManager &r_AssetMgr;
 
-    template <ValidEntity E, typename... Args>
+    template <ValidEntity E, RenderLayer::T L, typename... Args>
+    requires RenderLayer::Valid<L>
     E &NewEntity(Args &&... args) {
       auto e = new E{cbn::meta::Forward<Args>(args)...};
-      m_Entities.Push(e);
+      m_Entities[L].Push(e);
       return *e;
     }
 
   private:
-    cbn::List<Entity *> m_Entities;
+    std::array<cbn::List<Entity *>, RenderLayer::Count> m_Entities;
   };
 
   /**
@@ -182,10 +206,10 @@ namespace gph {
     };
 
     explicit Game(const Spec &s)
-      : m_Canvas{cbn::DrawCanvas::make(s.width, s.height)},
+      : m_Canvas{typeof(m_Canvas)::make(s.width, s.height)},
         m_AssetMgr{s.ap_path}
     {
-      cbn::win::Open(m_Canvas, s.title);
+      m_Canvas.OpenWindow(s.title);
     }
 
     Game(const Game &) = delete;
@@ -207,9 +231,8 @@ namespace gph {
       cbn::win::ForFrame([this](const auto dt){
         m_SceneMgr.Process();
         m_SceneMgr.Update(dt);
-        m_Canvas.Fill(0);
         m_SceneMgr.Render();
-        cbn::win::Update(m_Canvas);
+        m_Canvas.UpdateWindow();
       });
     }
 
