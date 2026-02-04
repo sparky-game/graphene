@@ -1,4 +1,5 @@
-#pragma once
+// SPDX-License-Identifier: MIT
+// Copyright (C) Wasym A. Alonso. All Rights Reserved.
 
 struct Color {
   static constexpr auto Black  {0x181818ff};

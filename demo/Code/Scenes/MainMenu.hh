@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) Wasym A. Alonso. All Rights Reserved.
+
 struct MainMenu final : gph::Scene {
   using Scene::Scene;
 

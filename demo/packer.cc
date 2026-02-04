@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) Wasym A. Alonso. All Rights Reserved.
+
 #include <carbon.h>
 
 int main(int argc, char **argv) {

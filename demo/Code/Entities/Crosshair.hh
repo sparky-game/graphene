@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) Wasym A. Alonso. All Rights Reserved.
+
 struct Crosshair final : gph::Entity {
   const cbn::sprite_mgr::UID m_Sprite;
   cbn::math::Vec2 m_Position {};

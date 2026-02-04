@@ -29,6 +29,15 @@
   ----------
   (...)
 
+  3.2.1. Callback execution lifecycle
+  -----------------------------------
+  (...)
+
+  - Born() :: upon creation
+  - Die() :: upon destruction
+  - Awake() :: upon enable/resume
+  - Snooze() :: upon disable/pause
+
   4. Folder structure suggestion
   ==============================
   Assets
@@ -121,8 +130,10 @@ namespace gph {
       }
     }
 
-    virtual void OnEnter(void) {}
-    virtual void OnExit(void) {}
+    virtual void Born(void) {}
+    virtual void Die(void) {}
+    virtual void Awake(void) {}
+    virtual void Snooze(void) {}
     virtual void Update([[maybe_unused]] const f64 dt) {}
     virtual void Render(void) const {}
 
@@ -177,6 +188,34 @@ namespace gph {
 
     ~SceneManager(void) {
       while (m_Scenes.size) Pop();
+      m_Scenes.Free();
+    }
+
+    usz Count(void) const {
+      return m_Scenes.size;
+    }
+
+    template <ValidScene S>
+    void Switch(cbn::DrawCanvas &dc, const AssetManager &a_mgr) {
+      while (m_Scenes.size) Pop();
+      Push<S>(dc, a_mgr);
+    }
+
+    template <ValidScene S>
+    void Push(cbn::DrawCanvas &dc, const AssetManager &a_mgr) {
+      auto ns = new S{dc, *this, a_mgr};
+      if (m_Scenes.size) m_Scenes.Back()->Snooze();
+      m_Scenes.Push(ns);
+      ns->Born();
+    }
+
+    void Pop(void) {
+      if (!m_Scenes.size) return;
+      auto curr = m_Scenes.Back();
+      curr->Die();
+      delete curr;
+      m_Scenes.PopBack();
+      if (m_Scenes.size) m_Scenes.Back()->Awake();
     }
 
     void Update(const f64 dt) const {
@@ -185,29 +224,6 @@ namespace gph {
 
     void Render(void) const {
       if (m_Scenes.size) m_Scenes.Back()->RenderAll();
-    }
-
-    template <ValidScene S>
-    void Push(cbn::DrawCanvas &dc, const AssetManager &a_mgr) {
-      auto ns = new S{dc, *this, a_mgr};
-      if (m_Scenes.size) m_Scenes.Back()->OnExit();
-      m_Scenes.Push(ns);
-      ns->OnEnter();
-    }
-
-    void Pop(void) {
-      if (!m_Scenes.size) return;
-      auto curr = m_Scenes.Back();
-      curr->OnExit();
-      delete curr;
-      m_Scenes.PopBack();
-      if (m_Scenes.size) m_Scenes.Back()->OnEnter();
-    }
-
-    template <ValidScene S>
-    void Switch(cbn::DrawCanvas &dc, const AssetManager &a_mgr) {
-      while (m_Scenes.size) Pop();
-      Push<S>(dc, a_mgr);
     }
 
   private:

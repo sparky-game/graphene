@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) Wasym A. Alonso. All Rights Reserved.
+
 template <u32 C, usz S>
 struct Character : gph::Entity {
   static constexpr auto c_Color {C};

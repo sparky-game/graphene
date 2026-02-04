@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) Wasym A. Alonso. All Rights Reserved.
+
 #include <graphene.hh>
 // Data
 #include "Code/Data/Color.hh"
@@ -7,6 +10,7 @@
 #include "Code/Entities/Player.hh"
 #include "Code/Entities/Enemy.hh"
 // Scenes
+#include "Code/Scenes/PauseMenu.hh"
 #include "Code/Scenes/Gameplay.hh"
 #include "Code/Scenes/MainMenu.hh"
 

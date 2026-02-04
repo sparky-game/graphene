@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (C) Wasym A. Alonso. All Rights Reserved.
+
 struct Player final : Character<Color::Blue, 50> {
   const Crosshair &r_Crosshair;
 
