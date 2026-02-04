@@ -20,6 +20,13 @@
   3. Definitions
   ==============
   This section defines common terms used throughout graphene.
+
+  3.1. Entity
+  -----------
+  (...)
+
+  3.2. Scene
+  ----------
   (...)
 
   4. Folder structure suggestion
@@ -55,14 +62,11 @@ namespace gph {
    */
   struct Entity {
     explicit Entity(void) = default;
-
     Entity(const Entity &) = delete;
     Entity(Entity &&) = delete;
     Entity &operator=(const Entity &) = delete;
     Entity &operator=(Entity &&) = delete;
-
     virtual ~Entity(void) = default;
-
     virtual void Update([[maybe_unused]] const f64 dt) {}
     virtual void Render([[maybe_unused]] cbn::DrawCanvas &dc) const {}
   };

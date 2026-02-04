@@ -2,9 +2,9 @@ struct Crosshair : gph::Entity {
   const cbn::sprite_mgr::UID m_Sprite;
   cbn::math::Vec2 m_Position {};
 
-  explicit Crosshair(cbn::sprite_mgr::UID sp) : m_Sprite{sp} {}
+  explicit Crosshair(cbn::sprite_mgr::UID s) : m_Sprite{s} {}
 
-  virtual void Update(const f64 dt) override {
+  virtual void Update([[maybe_unused]] const f64 dt) override {
     m_Position = cbn::win::GetMousePosition();
   }
 

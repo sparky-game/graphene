@@ -11,7 +11,7 @@ struct MainMenu final : gph::Scene {
   }
 
   virtual void Render(void) const override {
-    r_Canvas.Fill((u32)Color::Black);
+    r_Canvas.Fill(Color::Black);
     Render_Title<"Le Game", 100>();
     Render_Button<"<1> Play", 300>();
     Render_Button<"<2> Exit", 500>();
@@ -22,7 +22,7 @@ private:
   void Render_Title(void) const {
     static constexpr auto text = Text.value;
     static constexpr auto text_size = 14;
-    static constexpr auto text_color = (u32)Color::White;
+    static constexpr auto text_color = Color::White;
     static const auto text_width = r_Canvas.TextWidth(text, text_size);
     static const auto text_pos = cbn::math::Vec2(r_Canvas.width/2 - text_width/2, YPos);
     r_Canvas.DrawText(text, text_pos, text_size, text_color);
@@ -32,12 +32,12 @@ private:
   void Render_Button(void) const {
     static constexpr auto text = Text.value;
     static constexpr auto text_size = 4;
-    static constexpr auto text_color = (u32)Color::Black;
+    static constexpr auto text_color = Color::Black;
     static constexpr cbn::math::Vec2 text_padding {20, 15};
     static const auto text_width = r_Canvas.TextWidth(text, text_size);
     static const auto text_height = r_Canvas.TextHeight(text_size);
     static const auto text_pos = cbn::math::Vec2(r_Canvas.width/2 - text_width/2, YPos);
-    static constexpr auto btn_color = (u32)Color::White;
+    static constexpr auto btn_color = Color::White;
     static const cbn::math::Rect btn_xywh {
       text_pos.x - text_padding.x,
       text_pos.y - text_padding.y - 2*text_size,
