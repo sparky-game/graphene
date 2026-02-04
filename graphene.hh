@@ -168,7 +168,7 @@ namespace gph {
    * @brief ...
    */
   struct SceneManager final {
-    explicit SceneManager(void) = default;
+    explicit SceneManager(void) : m_Scenes{typeof(m_Scenes)::make()} {}
 
     SceneManager(const SceneManager &) = delete;
     SceneManager(SceneManager &&) = delete;
@@ -176,38 +176,42 @@ namespace gph {
     SceneManager &operator=(SceneManager &&) = delete;
 
     ~SceneManager(void) {
-      if (m_Current) delete m_Current;
-      if (m_Next) delete m_Next;
+      while (m_Scenes.size) Pop();
     }
 
     void Update(const f64 dt) const {
-      if (m_Current) m_Current->UpdateAll(dt);
+      if (m_Scenes.size) m_Scenes.Back()->UpdateAll(dt);
     }
 
     void Render(void) const {
-      if (m_Current) m_Current->RenderAll();
+      if (m_Scenes.size) m_Scenes.Back()->RenderAll();
+    }
+
+    template <ValidScene S>
+    void Push(cbn::DrawCanvas &dc, const AssetManager &a_mgr) {
+      auto ns = new S{dc, *this, a_mgr};
+      if (m_Scenes.size) m_Scenes.Back()->OnExit();
+      m_Scenes.Push(ns);
+      ns->OnEnter();
+    }
+
+    void Pop(void) {
+      if (!m_Scenes.size) return;
+      auto curr = m_Scenes.Back();
+      curr->OnExit();
+      delete curr;
+      m_Scenes.PopBack();
+      if (m_Scenes.size) m_Scenes.Back()->OnEnter();
     }
 
     template <ValidScene S>
     void Switch(cbn::DrawCanvas &dc, const AssetManager &a_mgr) {
-      if (m_Next) delete m_Next;
-      m_Next = new S{dc, *this, a_mgr};
-    }
-
-    void Process(void) {
-      if (!m_Next) return;
-      if (m_Current) {
-        m_Current->OnExit();
-        delete m_Current;
-      }
-      m_Current = m_Next;
-      m_Next = nullptr;
-      m_Current->OnEnter();
+      while (m_Scenes.size) Pop();
+      Push<S>(dc, a_mgr);
     }
 
   private:
-    Scene *m_Current {nullptr};
-    Scene *m_Next {nullptr};
+    cbn::List<Scene *> m_Scenes;
   };
 
   /**
@@ -277,7 +281,6 @@ namespace gph {
 
     void Run(void) {
       cbn::win::ForFrame([this](const auto dt){
-        m_SceneMgr.Process();
         m_SceneMgr.Update(dt);
         m_SceneMgr.Render();
         m_Canvas.UpdateWindow();
