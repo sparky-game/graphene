@@ -1,4 +1,4 @@
-struct Crosshair : gph::Entity {
+struct Crosshair final : gph::Entity {
   const cbn::sprite_mgr::UID m_Sprite;
   cbn::math::Vec2 m_Position {};
 
