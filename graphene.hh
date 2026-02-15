@@ -274,10 +274,10 @@ namespace gph {
     };
 
     explicit Game(const Spec &s)
-      : m_Canvas{typeof(m_Canvas)::make(s.width, s.height)},
+      : m_Canvas{cbn::DrawCanvas::New(s.width, s.height)},
         m_AssetMgr{s.ap_path}
     {
-      m_Canvas.OpenWindow(s.title);
+      m_Canvas->OpenWindow(s.title);
     }
 
     Game(const Game &) = delete;
@@ -287,24 +287,23 @@ namespace gph {
 
     ~Game(void) {
       cbn::win::Close();
-      m_Canvas.Free();
     }
 
     template <ValidScene S>
     void InitScene(void) {
-      m_SceneMgr.Switch<S>(m_Canvas, m_AssetMgr);
+      m_SceneMgr.Switch<S>(*m_Canvas, m_AssetMgr);
     }
 
     void Run(void) {
       cbn::win::ForFrame([this](const auto dt){
         m_SceneMgr.Update(dt);
         m_SceneMgr.Render();
-        m_Canvas.UpdateWindow();
+        m_Canvas->UpdateWindow();
       });
     }
 
   private:
-    cbn::DrawCanvas m_Canvas;
+    cbn::Scope<cbn::DrawCanvas> m_Canvas;
     SceneManager m_SceneMgr;
     AssetManager m_AssetMgr;
   };

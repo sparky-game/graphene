@@ -27,7 +27,7 @@ private:
     static constexpr auto text_size = 14;
     static constexpr auto text_color = Color::White;
     static const auto text_width = r_Canvas.TextWidth(text, text_size);
-    static const auto text_pos = cbn::math::Vec2(r_Canvas.width/2 - text_width/2, YPos);
+    static const auto text_pos = cbn::math::Vec2(r_Canvas.Width()/2 - text_width/2, YPos);
     r_Canvas.DrawText(text, text_pos, text_size, text_color);
   }
 
@@ -39,7 +39,7 @@ private:
     static constexpr cbn::math::Vec2 text_padding {20, 15};
     static const auto text_width = r_Canvas.TextWidth(text, text_size);
     static const auto text_height = r_Canvas.TextHeight(text_size);
-    static const auto text_pos = cbn::math::Vec2(r_Canvas.width/2 - text_width/2, YPos);
+    static const auto text_pos = cbn::math::Vec2(r_Canvas.Width()/2 - text_width/2, YPos);
     static constexpr auto btn_color = Color::White;
     static const cbn::math::Rect btn_xywh {
       text_pos.x - text_padding.x,
