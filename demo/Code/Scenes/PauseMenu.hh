@@ -4,6 +4,10 @@
 struct PauseMenu final : gph::Scene {
   using Scene::Scene;
 
+  virtual void Born(void) override {
+    cbn::win::SetMouseVisibility(true);
+  }
+
   virtual void Update([[maybe_unused]] const f64 dt) override {
     if (cbn::win::GetKeyDown(cbn::win::KeyCode::Escape)) {
       r_SceneMgr.Pop();
