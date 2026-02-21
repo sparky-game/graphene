@@ -188,7 +188,7 @@ namespace gph {
     SceneManager &operator=(SceneManager &&) = delete;
 
     ~SceneManager(void) {
-      while (m_Scenes.size) Pop();
+      Drain();
       m_Scenes.Free();
     }
 
@@ -198,7 +198,7 @@ namespace gph {
 
     template <ValidScene S>
     void Switch(cbn::DrawCanvas &dc, const AssetManager &a_mgr) {
-      while (m_Scenes.size) Pop();
+      Drain();
       Push<S>(dc, a_mgr);
     }
 
@@ -211,6 +211,24 @@ namespace gph {
     }
 
     void Pop(void) {
+      m_PendingPop = true;
+    }
+
+    void Update(const f64 dt) {
+      if (m_Scenes.size) m_Scenes.Back()->UpdateAll(dt);
+      FlushDeferred();
+    }
+
+    void Render(void) const {
+      if (m_Scenes.size) m_Scenes.Back()->RenderAll();
+    }
+
+  private:
+    void Drain(void) {
+      while (m_Scenes.size) PopNow();
+    }
+
+    void PopNow(void) {
       if (!m_Scenes.size) return;
       auto curr = m_Scenes.Back();
       curr->Die();
@@ -219,16 +237,15 @@ namespace gph {
       if (m_Scenes.size) m_Scenes.Back()->Awake();
     }
 
-    void Update(const f64 dt) const {
-      if (m_Scenes.size) m_Scenes.Back()->UpdateAll(dt);
+    void FlushDeferred(void) {
+      if (m_PendingPop) {
+        PopNow();
+        m_PendingPop = false;
+      }
     }
 
-    void Render(void) const {
-      if (m_Scenes.size) m_Scenes.Back()->RenderAll();
-    }
-
-  private:
     cbn::List<Scene *> m_Scenes;
+    bool m_PendingPop {false};
   };
 
   /**
