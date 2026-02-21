@@ -33,10 +33,11 @@
   -----------------------------------
   (...)
 
+  Scene:
   - Born() :: upon creation
   - Die() :: upon destruction
-  - Awake() :: upon enable/resume
-  - Snooze() :: upon disable/pause
+  - Awake() :: upon resume
+  - Snooze() :: upon pause
 
   4. Folder structure suggestion
   ==============================
@@ -61,8 +62,8 @@
 
 #include <carbon.h>
 
-#if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != 17
-#error Carbon v0.17 is needed
+#if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != 18
+#error Carbon v0.18 is needed
 #endif
 
 namespace gph {
