@@ -12,7 +12,7 @@ struct Crosshair final : gph::Entity {
   }
 
   virtual void Render(cbn::DrawCanvas &dc) const override {
-    const auto * const sp = cbn::sprite_mgr::Lookup(m_Sprite);
+    static const auto sp = cbn::sprite_mgr::Lookup(m_Sprite);
     const auto sp_pos = m_Position - cbn::math::Vec2(sp->width, sp->height)/2;
     dc.DrawSprite(sp, sp_pos);
   }
