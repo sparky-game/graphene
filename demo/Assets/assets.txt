@@ -1,2 +1,0 @@
-["Art/Sprites/" as images]
-crosshair.png
