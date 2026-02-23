@@ -108,28 +108,60 @@ namespace gph {
   /**
    * @brief ...
    */
+  struct EntityPool final {
+    explicit EntityPool(void) {
+      for (auto &l : m_Entities) {
+        l = typeof(m_Entities)::value_type::make();
+      }
+    }
+
+    ~EntityPool(void) {
+      for (auto &l : m_Entities) {
+        for (auto e : l) delete e;
+        l.Free();
+      }
+    }
+
+    template <ValidEntity E, RenderLayer::T L, typename... Args>
+    requires RenderLayer::Valid<L>
+    E &Push(Args &&... args) {
+      auto e = new E{cbn::meta::Forward<Args>(args)...};
+      m_Entities[L].Push(e);
+      return *e;
+    }
+
+    void Update(const f64 dt) {
+      for (const auto &l : m_Entities) {
+        for (auto e : l) e->Update(dt);
+      }
+    }
+
+    void Render(cbn::DrawCanvas &dc) const {
+      for (const auto &l : m_Entities) {
+        for (auto e : l) e->Render(dc);
+      }
+    }
+
+  private:
+    std::array<cbn::List<Entity *>, RenderLayer::Count> m_Entities;
+  };
+
+  /**
+   * @brief ...
+   */
   struct Scene {
     explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, const AssetManager &a_mgr)
       : r_Canvas{dc},
         r_SceneMgr{s_mgr},
         r_AssetMgr{a_mgr}
-    {
-      for (auto &l : m_Entities) {
-        l = typeof(m_Entities)::value_type::make();
-      }
-    }
+    {}
 
     Scene(const Scene &) = delete;
     Scene(Scene &&) = delete;
     Scene &operator=(const Scene &) = delete;
     Scene &operator=(Scene &&) = delete;
 
-    virtual ~Scene(void) {
-      for (auto &l : m_Entities) {
-        for (auto e : l) delete e;
-        l.Free();
-      }
-    }
+    virtual ~Scene(void) = default;
 
     virtual void Born(void) {}
     virtual void Die(void) {}
@@ -140,16 +172,12 @@ namespace gph {
 
     void UpdateAll(const f64 dt) {
       Update(dt);
-      for (const auto &l : m_Entities) {
-        for (auto e : l) e->Update(dt);
-      }
+      m_Pool.Update(dt);
     }
 
     void RenderAll(void) const {
       Render();
-      for (const auto &l : m_Entities) {
-        for (auto e : l) e->Render(r_Canvas);
-      }
+      m_Pool.Render(r_Canvas);
     }
 
   protected:
@@ -160,13 +188,11 @@ namespace gph {
     template <ValidEntity E, RenderLayer::T L, typename... Args>
     requires RenderLayer::Valid<L>
     E &NewEntity(Args &&... args) {
-      auto e = new E{cbn::meta::Forward<Args>(args)...};
-      m_Entities[L].Push(e);
-      return *e;
+      return m_Pool.Push<E, L>(args...);
     }
 
   private:
-    std::array<cbn::List<Entity *>, RenderLayer::Count> m_Entities;
+    EntityPool m_Pool;
   };
 
   /**
@@ -307,6 +333,16 @@ namespace gph {
       cbn::win::Close();
     }
 
+    cbn::sprite_mgr::UID LoadSprite(const char *name) const {
+      return m_AssetMgr.LoadSprite(name);
+    }
+
+    template <ValidEntity E, RenderLayer::T L, typename... Args>
+    requires RenderLayer::Valid<L>
+    E &NewEntity(Args &&... args) {
+      return m_GlobalPool.Push<E, L>(args...);
+    }
+
     template <ValidScene S>
     void InitScene(void) {
       m_SceneMgr.Switch<S>(*m_Canvas, m_AssetMgr);
@@ -315,7 +351,9 @@ namespace gph {
     void Run(void) {
       cbn::win::ForFrame([this](const auto dt){
         m_SceneMgr.Update(dt);
+        m_GlobalPool.Update(dt);
         m_SceneMgr.Render();
+        m_GlobalPool.Render(*m_Canvas);
         m_Canvas->UpdateWindow();
       });
     }
@@ -324,6 +362,7 @@ namespace gph {
     cbn::Scope<cbn::DrawCanvas> m_Canvas;
     SceneManager m_SceneMgr;
     AssetManager m_AssetMgr;
+    EntityPool m_GlobalPool;
   };
 }
 
