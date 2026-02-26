@@ -84,9 +84,8 @@ namespace gph {
   /**
    * @brief ...
    */
-  // TODO: migrate to `cbn::meta::IsBase_v` and `cbn::meta::IsConvertible_v`
   template <typename T>
-  concept ValidEntity = std::is_base_of_v<Entity, T> and std::is_convertible_v<T*, Entity*>;
+  concept ValidEntity = cbn::meta::IsConvertible_v<T*, Entity*>;
 
   /**
    * @brief ...
@@ -188,7 +187,7 @@ namespace gph {
     template <ValidEntity E, RenderLayer::T L, typename... Args>
     requires RenderLayer::Valid<L>
     E &NewEntity(Args &&... args) {
-      return m_Pool.Push<E, L>(args...);
+      return m_Pool.Push<E, L>(cbn::meta::Forward<Args>(args)...);
     }
 
   private:
@@ -198,9 +197,8 @@ namespace gph {
   /**
    * @brief ...
    */
-  // TODO: migrate to `cbn::meta::IsBase_v` and `cbn::meta::IsConvertible_v`
   template <typename T>
-  concept ValidScene = std::is_base_of_v<Scene, T> and std::is_convertible_v<T*, Scene*>;
+  concept ValidScene = cbn::meta::IsConvertible_v<T*, Scene*>;
 
   /**
    * @brief ...
@@ -279,7 +277,7 @@ namespace gph {
    */
   struct AssetManager final {
     explicit AssetManager(const char *ap_path)
-      : m_AssetPack{cbn::SKAP::make(ap_path)}
+      : m_AssetPack{cbn::SKAP::Open(ap_path)}
     {
       if (!m_AssetPack) CARBON_UNREACHABLE;
       cbn::sprite_mgr::Init();
