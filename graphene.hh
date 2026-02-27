@@ -17,6 +17,19 @@
   ===========
   (...)
 
+  2.1. Build options
+  ------------------
+  `#define` these options before including this header, or pass them as compiler flags:
+
+  +-----------------------+--------------------------------+
+  | Option                | Description                    |
+  +-----------------------+--------------------------------+
+  | GPH_ASSETPACK         | Specifies the relative path to |
+  |                       | the SKAP AssetPack to use.     |
+  |                       | By default it's set to         |
+  |                       | "Assets.skap".                 |
+  +-----------------------+--------------------------------+
+
   3. Definitions
   ==============
   This section defines common terms used throughout graphene.
@@ -66,6 +79,10 @@
 #error Carbon v0.18 is needed
 #endif
 
+#ifndef GPH_ASSETPACK
+#define GPH_ASSETPACK "Assets.skap"
+#endif
+
 namespace gph {
   /**
    * @brief ...
@@ -102,7 +119,6 @@ namespace gph {
   };
 
   struct SceneManager;  // Forward declaration
-  struct AssetManager;  // Forward declaration
 
   /**
    * @brief ...
@@ -149,10 +165,8 @@ namespace gph {
    * @brief ...
    */
   struct Scene {
-    explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, const AssetManager &a_mgr)
-      : r_Canvas{dc},
-        r_SceneMgr{s_mgr},
-        r_AssetMgr{a_mgr}
+    explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr)
+      : r_Canvas{dc}, r_SceneMgr{s_mgr}
     {}
 
     Scene(const Scene &) = delete;
@@ -182,7 +196,6 @@ namespace gph {
   protected:
     cbn::DrawCanvas &r_Canvas;
     SceneManager &r_SceneMgr;
-    const AssetManager &r_AssetMgr;
 
     template <ValidEntity E, RenderLayer::T L, typename... Args>
     requires RenderLayer::Valid<L>
@@ -221,14 +234,14 @@ namespace gph {
     }
 
     template <ValidScene S>
-    void Switch(cbn::DrawCanvas &dc, const AssetManager &a_mgr) {
+    void Switch(cbn::DrawCanvas &dc) {
       Drain();
-      Push<S>(dc, a_mgr);
+      Push<S>(dc);
     }
 
     template <ValidScene S>
-    void Push(cbn::DrawCanvas &dc, const AssetManager &a_mgr) {
-      auto ns = new S{dc, *this, a_mgr};
+    void Push(cbn::DrawCanvas &dc) {
+      auto ns = new S{dc, *this};
       if (m_Scenes.size) m_Scenes.Back()->Snooze();
       m_Scenes.Push(ns);
       ns->Born();
@@ -276,18 +289,15 @@ namespace gph {
    * @brief ...
    */
   struct AssetManager final {
-    explicit AssetManager(const char *ap_path)
-      : m_AssetPack{cbn::SKAP::Open(ap_path)}
-    {
-      if (!m_AssetPack) CARBON_UNREACHABLE;
-      cbn::sprite_mgr::Init();
-      cbn::audio::Init();
-    }
-
     AssetManager(const AssetManager &) = delete;
     AssetManager(AssetManager &&) = delete;
     AssetManager &operator=(const AssetManager &) = delete;
     AssetManager &operator=(AssetManager &&) = delete;
+
+    static AssetManager &Get(void) {
+      static AssetManager instance;
+      return instance;
+    }
 
     ~AssetManager(void) {
       cbn::audio::Shutdown();
@@ -303,6 +313,14 @@ namespace gph {
 
   private:
     cbn::Opt<cbn::SKAP> m_AssetPack;
+
+    AssetManager(void)
+      : m_AssetPack{cbn::SKAP::Open(GPH_ASSETPACK)}
+    {
+      if (!m_AssetPack) CARBON_UNREACHABLE;
+      cbn::sprite_mgr::Init();
+      cbn::audio::Init();
+    }
   };
 
   /**
@@ -312,12 +330,10 @@ namespace gph {
     struct Spec {
       usz width, height;
       const char *title;
-      const char *ap_path;
     };
 
     explicit Game(const Spec &s)
-      : m_Canvas{cbn::DrawCanvas::New(s.width, s.height)},
-        m_AssetMgr{s.ap_path}
+      : m_Canvas{cbn::DrawCanvas::New(s.width, s.height)}
     {
       m_Canvas->OpenWindow(s.title);
     }
@@ -331,10 +347,6 @@ namespace gph {
       cbn::win::Close();
     }
 
-    cbn::sprite_mgr::UID LoadSprite(const char *name) const {
-      return m_AssetMgr.LoadSprite(name);
-    }
-
     template <ValidEntity E, RenderLayer::T L, typename... Args>
     requires RenderLayer::Valid<L>
     E &NewEntity(Args &&... args) {
@@ -343,7 +355,7 @@ namespace gph {
 
     template <ValidScene S>
     void InitScene(void) {
-      m_SceneMgr.Switch<S>(*m_Canvas, m_AssetMgr);
+      m_SceneMgr.Switch<S>(*m_Canvas);
     }
 
     void Run(void) {
@@ -359,7 +371,6 @@ namespace gph {
   private:
     cbn::Scope<cbn::DrawCanvas> m_Canvas;
     SceneManager m_SceneMgr;
-    AssetManager m_AssetMgr;
     EntityPool m_GlobalPool;
   };
 }
