@@ -299,12 +299,6 @@ namespace gph {
       return instance;
     }
 
-    ~AssetManager(void) {
-      cbn::audio::Shutdown();
-      cbn::sprite_mgr::Shutdown();
-      m_AssetPack->Free();
-    }
-
     cbn::sprite_mgr::UID LoadSprite(const char *name) const {
       auto s = m_AssetPack->LoadSprite(name);
       if (!s) CARBON_UNREACHABLE;
@@ -320,6 +314,12 @@ namespace gph {
       if (!m_AssetPack) CARBON_UNREACHABLE;
       cbn::sprite_mgr::Init();
       cbn::audio::Init();
+    }
+
+    ~AssetManager(void) {
+      cbn::audio::Shutdown();
+      cbn::sprite_mgr::Shutdown();
+      m_AssetPack->Free();
     }
   };
 
