@@ -124,16 +124,9 @@ namespace gph {
    * @brief ...
    */
   struct EntityPool final {
-    explicit EntityPool(void) {
-      for (auto &l : m_Entities) {
-        l = typeof(m_Entities)::value_type::make();
-      }
-    }
-
     ~EntityPool(void) {
       for (auto &l : m_Entities) {
         for (auto e : l) delete e;
-        l.Free();
       }
     }
 
@@ -143,6 +136,27 @@ namespace gph {
       auto e = new E{cbn::meta::Forward<Args>(args)...};
       m_Entities[L].Push(e);
       return *e;
+    }
+
+    template <ValidEntity E>
+    E *FindFirst(void) const {
+      for (const auto &l : m_Entities) {
+        for (auto e : l) {
+          if (auto p = dynamic_cast<E *>(e)) return p;
+        }
+      }
+      return nullptr;
+    }
+
+    template <ValidEntity E>
+    cbn::List<E *> Find(void) const {
+      cbn::List<E *> ps;
+      for (const auto &l : m_Entities) {
+        for (auto e : l) {
+          if (auto p = dynamic_cast<E *>(e)) ps.Push(p);
+        }
+      }
+      return ps;
     }
 
     void Update(const f64 dt) {
@@ -165,8 +179,8 @@ namespace gph {
    * @brief ...
    */
   struct Scene {
-    explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr)
-      : r_Canvas{dc}, r_SceneMgr{s_mgr}
+    explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, EntityPool &gp)
+      : r_Canvas{dc}, r_SceneMgr{s_mgr}, r_GlobalPool{gp}
     {}
 
     Scene(const Scene &) = delete;
@@ -203,8 +217,21 @@ namespace gph {
       return m_Pool.Push<E, L>(cbn::meta::Forward<Args>(args)...);
     }
 
+    template <ValidEntity E>
+    E *FindFirstEntity(void) const { return m_Pool.FindFirst<E>(); }
+
+    template <ValidEntity E>
+    cbn::List<E *> FindEntities(void) const { return m_Pool.Find<E>(); }
+
+    template <ValidEntity E>
+    E *FindFirstGlobalEntity(void) const { return r_GlobalPool.FindFirst<E>(); }
+
+    template <ValidEntity E>
+    cbn::List<E *> FindGlobalEntities(void) const { return r_GlobalPool.Find<E>(); }
+
   private:
     EntityPool m_Pool;
+    EntityPool &r_GlobalPool;
   };
 
   /**
@@ -217,7 +244,9 @@ namespace gph {
    * @brief ...
    */
   struct SceneManager final {
-    explicit SceneManager(void) : m_Scenes{typeof(m_Scenes)::make()} {}
+    explicit SceneManager(EntityPool &gp)
+      : r_GlobalPool{gp}
+    {}
 
     SceneManager(const SceneManager &) = delete;
     SceneManager(SceneManager &&) = delete;
@@ -226,7 +255,6 @@ namespace gph {
 
     ~SceneManager(void) {
       Drain();
-      m_Scenes.Free();
     }
 
     usz Count(void) const {
@@ -241,7 +269,7 @@ namespace gph {
 
     template <ValidScene S>
     void Push(cbn::DrawCanvas &dc) {
-      auto ns = new S{dc, *this};
+      auto ns = new S{dc, *this, r_GlobalPool};
       if (m_Scenes.size) m_Scenes.Back()->Snooze();
       m_Scenes.Push(ns);
       ns->Born();
@@ -283,6 +311,7 @@ namespace gph {
 
     cbn::List<Scene *> m_Scenes;
     bool m_PendingPop {false};
+    EntityPool &r_GlobalPool;
   };
 
   /**
@@ -333,7 +362,8 @@ namespace gph {
     };
 
     explicit Game(const Spec &s)
-      : m_Canvas{cbn::DrawCanvas::New(s.width, s.height)}
+      : m_Canvas{cbn::DrawCanvas::New(s.width, s.height)},
+        m_SceneMgr{m_GlobalPool}
     {
       m_Canvas->OpenWindow(s.title);
     }
