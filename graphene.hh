@@ -172,7 +172,7 @@ namespace gph {
     }
 
   private:
-    std::array<cbn::List<Entity *>, RenderLayer::Count> m_Entities;
+    cbn::Array<cbn::List<Entity *>, RenderLayer::Count> m_Entities;
   };
 
   /**
