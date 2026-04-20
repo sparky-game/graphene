@@ -263,8 +263,10 @@ namespace gph {
 
     template <ValidScene S>
     void Switch(cbn::DrawCanvas &dc) {
-      Drain();
-      Push<S>(dc);
+      m_PendingSwitch = [&]{
+        Drain();
+        Push<S>(dc);
+      };
     }
 
     template <ValidScene S>
@@ -303,6 +305,10 @@ namespace gph {
     }
 
     void FlushDeferred(void) {
+      if (m_PendingSwitch) {
+        m_PendingSwitch();
+        m_PendingSwitch = nullptr;
+      }
       if (m_PendingPop) {
         PopNow();
         m_PendingPop = false;
@@ -311,6 +317,7 @@ namespace gph {
 
     cbn::List<Scene *> m_Scenes;
     bool m_PendingPop {false};
+    cbn::Func<void()> m_PendingSwitch;
     EntityPool &r_GlobalPool;
   };
 
