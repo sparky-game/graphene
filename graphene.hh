@@ -1,6 +1,6 @@
 /*
   Game engine C++ header-only library. MIT. See license statements at the end of this file.
-  graphene - v0.1-alpha - YYYY-MM-DD
+  graphene - v0.1-dev - 2026-04-20
 
   Wasym Atieh Alonso - wasymatieh01@gmail.com
 
@@ -73,8 +73,14 @@
 
 #pragma once
 
-#include <carbon.h>
+/**
+ * @brief Library printable name.
+ */
+#define GPH_LIBNAME "SPARKY Graphene"
 
+#define GPH_VERSION_STR "0.1-dev"
+
+#include <carbon.h>
 #if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != 18
 #error Carbon v0.18 is needed
 #endif
@@ -84,11 +90,14 @@
 #endif
 
 namespace gph {
+  // Forward declarations
+  struct SceneManager;
+
   /**
    * @brief ...
    */
   struct Entity {
-    explicit Entity(void) = default;
+    Entity(void) = default;
     Entity(const Entity &) = delete;
     Entity(Entity &&) = delete;
     Entity &operator=(const Entity &) = delete;
@@ -118,16 +127,24 @@ namespace gph {
     concept Valid = Layer != Count;
   };
 
-  struct SceneManager;  // Forward declaration
-
   /**
    * @brief ...
    */
   struct EntityPool final {
+    explicit EntityPool(cbn::DrawCanvas &dc)
+      : r_Canvas{dc}
+    {}
+
     ~EntityPool(void) {
       for (auto &l : m_Entities) {
         for (auto e : l) delete e;
       }
+    }
+
+    usz Count(void) const {
+      usz n = 0;
+      for (const auto &l : m_Entities) n += l.size;
+      return n;
     }
 
     template <ValidEntity E, RenderLayer::T L, typename... Args>
@@ -165,21 +182,22 @@ namespace gph {
       }
     }
 
-    void Render(cbn::DrawCanvas &dc) const {
+    void Render(void) const {
       for (const auto &l : m_Entities) {
-        for (auto e : l) e->Render(dc);
+        for (auto e : l) e->Render(r_Canvas);
       }
     }
 
   private:
     cbn::Array<cbn::List<Entity *>, RenderLayer::Count> m_Entities;
+    cbn::DrawCanvas &r_Canvas;
   };
 
   /**
    * @brief ...
    */
   struct Scene {
-    explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, EntityPool &gp)
+    explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, const EntityPool &gp)
       : r_Canvas{dc}, r_SceneMgr{s_mgr}, r_GlobalPool{gp}
     {}
 
@@ -204,7 +222,7 @@ namespace gph {
 
     void RenderAll(void) const {
       Render();
-      m_Pool.Render(r_Canvas);
+      m_Pool.Render();
     }
 
   protected:
@@ -230,8 +248,8 @@ namespace gph {
     cbn::List<E *> FindGlobalEntities(void) const { return r_GlobalPool.Find<E>(); }
 
   private:
-    EntityPool m_Pool;
-    EntityPool &r_GlobalPool;
+    EntityPool m_Pool {r_Canvas};
+    const EntityPool &r_GlobalPool;
   };
 
   /**
@@ -335,11 +353,7 @@ namespace gph {
       return instance;
     }
 
-    cbn::sprite_mgr::UID LoadSprite(const char *name) const {
-      auto s = m_AssetPack->LoadSprite(name);
-      if (!s) CARBON_UNREACHABLE;
-      return *s;
-    }
+    u64 GetVersion(void) { return m_AssetPack->header.build_ver; }
 
   private:
     cbn::Opt<cbn::SKAP> m_AssetPack;
@@ -348,15 +362,76 @@ namespace gph {
       : m_AssetPack{cbn::SKAP::Open(GPH_ASSETPACK)}
     {
       if (!m_AssetPack) CARBON_UNREACHABLE;
-      cbn::sprite_mgr::Init();
       cbn::audio::Init();
+      cbn::mesh_mgr::Init();
+      cbn::sprite_mgr::Init();
     }
 
     ~AssetManager(void) {
-      cbn::audio::Shutdown();
       cbn::sprite_mgr::Shutdown();
+      cbn::mesh_mgr::Shutdown();
+      cbn::audio::Shutdown();
       m_AssetPack->Free();
     }
+
+    auto LoadAsset(auto load, const char *name) const {
+      auto s = ((*m_AssetPack).*load)(name);
+      if (!s) CARBON_UNREACHABLE;
+      return *s;
+    }
+
+  public:
+    cbn::sprite_mgr::UID LoadSprite(const char *name) const {
+      return LoadAsset(&cbn::SKAP::LoadSprite, name);
+    }
+
+    cbn::mesh_mgr::UID LoadMesh(const char *name) const {
+      return LoadAsset(&cbn::SKAP::LoadMesh, name);
+    }
+  };
+
+  /**
+   * @brief ...
+   */
+  struct DebugScreen final {
+    explicit DebugScreen(cbn::DrawCanvas &dc, const SceneManager &s_mgr, const EntityPool &gp)
+      : r_Canvas{dc}, r_SceneMgr{s_mgr}, r_GlobalPool{gp}
+    {}
+
+    DebugScreen(const DebugScreen &) = delete;
+    DebugScreen(DebugScreen &&) = delete;
+    DebugScreen &operator=(const DebugScreen &) = delete;
+    DebugScreen &operator=(DebugScreen &&) = delete;
+
+    void Update(const f64 dt) {
+      m_FrameTime = dt;
+      if (cbn::win::GetKeyDown(cbn::win::KeyCode::F3)) {
+        m_Visible ^= true;
+      }
+    }
+
+    void Render(void) const {
+      if (!m_Visible) return;
+      static constexpr auto txt_clr = 0x737373ff;
+      static constexpr auto txt_sz = 2;
+      static const auto txt_h = r_Canvas.TextHeight(txt_sz);
+      const char *txt[] {
+        "Engine (" GPH_LIBNAME ") " GPH_VERSION_STR,
+        cbn::str::fmt("Core (" CARBON_LIBNAME ") %s", cbn::VersionStr()),
+        cbn::str::fmt("AssetPack %llu", AssetManager::Get().GetVersion()),
+        cbn::str::fmt("%u fps (%.4f ms)", cbn::win::GetFPS(), m_FrameTime),
+      };
+      for (usz i = 0; i < CARBON_ARRAY_LEN(txt); ++i) {
+        r_Canvas.DrawText(txt[i], cbn::math::Vec2(10, 10 + i*txt_h), txt_sz, txt_clr);
+      }
+    }
+
+  private:
+    bool m_Visible {false};
+    f64 m_FrameTime;
+    cbn::DrawCanvas &r_Canvas;
+    const SceneManager &r_SceneMgr;
+    const EntityPool &r_GlobalPool;
   };
 
   /**
@@ -370,7 +445,8 @@ namespace gph {
 
     explicit Game(const Spec &s)
       : m_Canvas{cbn::DrawCanvas::New(s.width, s.height)},
-        m_SceneMgr{m_GlobalPool}
+        m_SceneMgr{m_GlobalPool},
+        m_DebugScr{*m_Canvas, m_SceneMgr, m_GlobalPool}
     {
       m_Canvas->OpenWindow(s.title);
     }
@@ -399,8 +475,10 @@ namespace gph {
       cbn::win::ForFrame([this](const auto dt){
         m_SceneMgr.Update(dt);
         m_GlobalPool.Update(dt);
+        m_DebugScr.Update(dt);
         m_SceneMgr.Render();
-        m_GlobalPool.Render(*m_Canvas);
+        m_GlobalPool.Render();
+        m_DebugScr.Render();
         m_Canvas->UpdateWindow();
       });
     }
@@ -408,7 +486,8 @@ namespace gph {
   private:
     cbn::Scope<cbn::DrawCanvas> m_Canvas;
     SceneManager m_SceneMgr;
-    EntityPool m_GlobalPool;
+    EntityPool m_GlobalPool {*m_Canvas};
+    DebugScreen m_DebugScr;
   };
 }
 
