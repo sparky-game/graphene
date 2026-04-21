@@ -215,6 +215,8 @@ namespace gph {
     virtual void Update([[maybe_unused]] const f64 dt) {}
     virtual void Render(void) const {}
 
+    usz EntityCount(void) const { return m_Pool.Count(); }
+
     void UpdateAll(const f64 dt) {
       Update(dt);
       m_Pool.Update(dt);
@@ -271,12 +273,13 @@ namespace gph {
     SceneManager &operator=(const SceneManager &) = delete;
     SceneManager &operator=(SceneManager &&) = delete;
 
-    ~SceneManager(void) {
-      Drain();
-    }
+    ~SceneManager(void) { Drain(); }
 
-    usz Count(void) const {
-      return m_Scenes.size;
+    usz Count(void) const { return m_Scenes.size; }
+
+    usz CurrentSceneEntityCount(void) const {
+      if (!m_Scenes.size) return 0;
+      return m_Scenes.Back()->EntityCount();
     }
 
     template <ValidScene S>
@@ -295,9 +298,7 @@ namespace gph {
       ns->Born();
     }
 
-    void Pop(void) {
-      m_PendingPop = true;
-    }
+    void Pop(void) { m_PendingPop = true; }
 
     void Update(const f64 dt) {
       if (m_Scenes.size) m_Scenes.Back()->UpdateAll(dt);
@@ -309,9 +310,12 @@ namespace gph {
     }
 
   private:
-    void Drain(void) {
-      while (m_Scenes.size) PopNow();
-    }
+    cbn::List<Scene *> m_Scenes;
+    bool m_PendingPop {false};
+    cbn::Func<void()> m_PendingSwitch;
+    EntityPool &r_GlobalPool;
+
+    void Drain(void) { while (m_Scenes.size) PopNow(); }
 
     void PopNow(void) {
       if (!m_Scenes.size) return;
@@ -332,11 +336,6 @@ namespace gph {
         m_PendingPop = false;
       }
     }
-
-    cbn::List<Scene *> m_Scenes;
-    bool m_PendingPop {false};
-    cbn::Func<void()> m_PendingSwitch;
-    EntityPool &r_GlobalPool;
   };
 
   /**
@@ -420,6 +419,9 @@ namespace gph {
         cbn::str::fmt("Core (" CARBON_LIBNAME ") %s", cbn::VersionStr()),
         cbn::str::fmt("AssetPack %llu", AssetManager::Get().GetVersion()),
         cbn::str::fmt("%u fps (%.4f ms)", cbn::win::GetFPS(), m_FrameTime),
+        cbn::str::fmt("Scenes in stack: %zu", r_SceneMgr.Count()),
+        cbn::str::fmt("Scene entities: %zu", r_SceneMgr.CurrentSceneEntityCount()),
+        cbn::str::fmt("Global entities: %zu", r_GlobalPool.Count())
       };
       for (usz i = 0; i < CARBON_ARRAY_LEN(txt); ++i) {
         r_Canvas.DrawText(txt[i], cbn::math::Vec2(10, 10 + i*txt_h), txt_sz, txt_clr);
