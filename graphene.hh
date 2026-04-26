@@ -93,6 +93,19 @@ namespace gph {
   // Forward declarations
   struct SceneManager;
 
+  namespace mem {
+    template <typename T, typename... Args>
+    T *New(Args &&... args) {
+      return new (cbn::mem::Alloc(sizeof(T))) T{cbn::meta::Forward<Args>(args)...};
+    }
+
+    template <typename T>
+    void Delete(T *p) {
+      p->~T();
+      cbn::mem::Free(p);
+    }
+  }
+
   /**
    * @brief ...
    */
@@ -107,11 +120,8 @@ namespace gph {
     virtual void Render([[maybe_unused]] cbn::DrawCanvas &dc) const {}
   };
 
-  /**
-   * @brief ...
-   */
   template <typename T>
-  concept ValidEntity = cbn::meta::IsConvertible_v<T*, Entity*>;
+  concept ValidEntity = cbn::meta::IsConvertible_v<T *, Entity *>;
 
   /**
    * @brief ...
@@ -137,7 +147,7 @@ namespace gph {
 
     ~EntityPool(void) {
       for (auto &l : m_Entities) {
-        for (auto e : l) delete e;
+        for (auto e : l) mem::Delete(e);
       }
     }
 
@@ -150,7 +160,7 @@ namespace gph {
     template <ValidEntity E, RenderLayer::T L, typename... Args>
     requires RenderLayer::Valid<L>
     E &Push(Args &&... args) {
-      auto e = new E{cbn::meta::Forward<Args>(args)...};
+      auto e = mem::New<E>(cbn::meta::Forward<Args>(args)...);
       m_Entities[L].Push(e);
       return *e;
     }
@@ -254,11 +264,8 @@ namespace gph {
     const EntityPool &r_GlobalPool;
   };
 
-  /**
-   * @brief ...
-   */
   template <typename T>
-  concept ValidScene = cbn::meta::IsConvertible_v<T*, Scene*>;
+  concept ValidScene = cbn::meta::IsConvertible_v<T *, Scene *>;
 
   /**
    * @brief ...
@@ -292,10 +299,10 @@ namespace gph {
 
     template <ValidScene S>
     void Push(cbn::DrawCanvas &dc) {
-      auto ns = new S{dc, *this, r_GlobalPool};
+      auto s = mem::New<S>(dc, *this, r_GlobalPool);
       if (m_Scenes.size) m_Scenes.Back()->Snooze();
-      m_Scenes.Push(ns);
-      ns->Born();
+      m_Scenes.Push(s);
+      s->Born();
     }
 
     void Pop(void) { m_PendingPop = true; }
@@ -321,7 +328,7 @@ namespace gph {
       if (!m_Scenes.size) return;
       auto curr = m_Scenes.Back();
       curr->Die();
-      delete curr;
+      mem::Delete(curr);
       m_Scenes.PopBack();
       if (m_Scenes.size) m_Scenes.Back()->Awake();
     }
@@ -419,9 +426,12 @@ namespace gph {
         cbn::str::fmt("Core (" CARBON_LIBNAME ") %s", cbn::VersionStr()),
         cbn::str::fmt("AssetPack %llu", AssetManager::Get().GetVersion()),
         cbn::str::fmt("%u fps (%.4f ms)", cbn::win::GetFPS(), m_FrameTime),
+        cbn::str::fmt("Canvas resolution: %zux%zu", r_Canvas.Width(), r_Canvas.Height()),
+        cbn::str::fmt("Window resolution: %zux%zu", cbn::win::Width(), cbn::win::Height()),
         cbn::str::fmt("Scenes in stack: %zu", r_SceneMgr.Count()),
         cbn::str::fmt("Scene entities: %zu", r_SceneMgr.CurrentSceneEntityCount()),
-        cbn::str::fmt("Global entities: %zu", r_GlobalPool.Count())
+        cbn::str::fmt("Global entities: %zu", r_GlobalPool.Count()),
+        cbn::str::fmt("Memory usage: %.2f MiB", (f64)cbn::mem::Usage()/(1<<20))
       };
       for (usz i = 0; i < CARBON_ARRAY_LEN(txt); ++i) {
         r_Canvas.DrawText(txt[i], cbn::math::Vec2(10, 10 + i*txt_h), txt_sz, txt_clr);
