@@ -387,6 +387,10 @@ namespace gph {
     }
 
   public:
+    cbn::Span<u8> LoadBinary(const char *name) const {
+      return LoadAsset(&cbn::SKAP::Lookup<cbn::Span<u8>>, name);
+    }
+
     cbn::sprite_mgr::UID LoadSprite(const char *name) const {
       return LoadAsset(&cbn::SKAP::LoadSprite, name);
     }
