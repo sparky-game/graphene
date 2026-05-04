@@ -46,11 +46,15 @@
   -----------------------------------
   (...)
 
-  Scene:
-  - Born() :: upon creation
-  - Die() :: upon destruction
-  - Awake() :: upon resume
-  - Snooze() :: upon pause
+  Scene callbacks:
+  - Born() :: upon creation; one-time setup (asset loading, entity spawning, etc.).
+  - Awake() :: upon resume (also after Born); recurring start logic.
+  - Snooze() :: upon pause (also before Die); counterpart to Awake.
+  - Die() :: upon destruction; one-time teardown, counterpart to Born.
+
+  Creation call stack     :: Born() -> Awake() -> (...)
+  Pause/resume call stack :: (...) -> Snooze() -> Awake() -> (...)
+  Destruction call stack  :: (...) -> Snooze() -> Die()
 
   4. Folder structure suggestion
   ==============================
@@ -219,9 +223,10 @@ namespace gph {
     virtual ~Scene(void) = default;
 
     virtual void Born(void) {}
-    virtual void Die(void) {}
     virtual void Awake(void) {}
     virtual void Snooze(void) {}
+    virtual void Die(void) {}
+
     virtual void Update([[maybe_unused]] const f64 dt) {}
     virtual void Render(void) const {}
 
@@ -302,7 +307,7 @@ namespace gph {
       auto s = mem::New<S>(dc, *this, r_GlobalPool);
       if (m_Scenes.size) m_Scenes.Back()->Snooze();
       m_Scenes.Push(s);
-      s->Born();
+      s->Born(), s->Awake();
     }
 
     void Pop(void) { m_PendingPop = true; }
@@ -326,9 +331,9 @@ namespace gph {
 
     void PopNow(void) {
       if (!m_Scenes.size) return;
-      auto curr = m_Scenes.Back();
-      curr->Die();
-      mem::Delete(curr);
+      auto s = m_Scenes.Back();
+      s->Snooze(), s->Die();
+      mem::Delete(s);
       m_Scenes.PopBack();
       if (m_Scenes.size) m_Scenes.Back()->Awake();
     }
@@ -454,7 +459,7 @@ namespace gph {
    * @brief ...
    */
   struct Game final {
-    struct Spec {
+    struct Spec final {
       usz width, height;
       const char *title;
     };
