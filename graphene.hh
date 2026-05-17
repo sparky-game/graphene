@@ -310,7 +310,9 @@ namespace gph {
       s->Born(), s->Awake();
     }
 
-    void Pop(void) { m_PendingPop = true; }
+    void Pop(void) {
+      if (m_Scenes.size > 1) m_PendingPop = true;
+    }
 
     void Update(const f64 dt) {
       if (m_Scenes.size) m_Scenes.Back()->UpdateAll(dt);
@@ -460,8 +462,8 @@ namespace gph {
    */
   struct Game final {
     struct Spec final {
-      usz width, height;
-      const char *title;
+      usz width {960}, height {540};
+      const char *title {"Le Game™"};
     };
 
     explicit Game(const Spec &s)
