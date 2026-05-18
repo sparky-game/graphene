@@ -169,6 +169,8 @@ namespace gph {
       return *e;
     }
 
+    void Delete(Entity &e) { m_Deleted.Push(&e); }
+
     template <ValidEntity E>
     E *FindFirst(void) const {
       for (const auto &l : m_Entities) {
@@ -194,6 +196,7 @@ namespace gph {
       for (const auto &l : m_Entities) {
         for (auto e : l) e->Update(dt);
       }
+      FlushDeferred();
     }
 
     void Render(void) const {
@@ -204,14 +207,28 @@ namespace gph {
 
   private:
     cbn::Array<cbn::List<Entity *>, RenderLayer::Count> m_Entities;
+    cbn::List<Entity *> m_Deleted;
     cbn::DrawCanvas &r_Canvas;
+
+    void FlushDeferred(void) {
+      for (auto e : m_Deleted) {
+        for (auto &l : m_Entities) {
+          if (isz i = l.Find(e); i != -1) {
+            l.Remove(i);
+            mem::Delete(e);
+            break;
+          }
+        }
+      }
+      m_Deleted.Clear();
+    }
   };
 
   /**
    * @brief ...
    */
   struct Scene {
-    explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, const EntityPool &gp)
+    explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, EntityPool &gp)
       : r_Canvas{dc}, r_SceneMgr{s_mgr}, r_GlobalPool{gp}
     {}
 
@@ -252,11 +269,21 @@ namespace gph {
       return m_Pool.New<E, L>(cbn::meta::Forward<Args>(args)...);
     }
 
+    void DeleteEntity(Entity &e) { m_Pool.Delete(e); }
+
     template <ValidEntity E>
     E *FindFirstEntity(void) const { return m_Pool.FindFirst<E>(); }
 
     template <ValidEntity E>
     cbn::List<E *> FindEntities(void) const { return m_Pool.Find<E>(); }
+
+    template <ValidEntity E, RenderLayer::T L, typename... Args>
+    requires RenderLayer::Valid<L>
+    E &NewGlobalEntity(Args &&... args) {
+      return r_GlobalPool.New<E, L>(cbn::meta::Forward<Args>(args)...);
+    }
+
+    void DeleteGlobalEntity(Entity &e) { r_GlobalPool.Delete(e); }
 
     template <ValidEntity E>
     E *FindFirstGlobalEntity(void) const { return r_GlobalPool.FindFirst<E>(); }
@@ -266,7 +293,7 @@ namespace gph {
 
   private:
     EntityPool m_Pool {r_Canvas};
-    const EntityPool &r_GlobalPool;
+    EntityPool &r_GlobalPool;
   };
 
   template <typename T>
