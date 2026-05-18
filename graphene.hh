@@ -163,7 +163,7 @@ namespace gph {
 
     template <ValidEntity E, RenderLayer::T L, typename... Args>
     requires RenderLayer::Valid<L>
-    E &Push(Args &&... args) {
+    E &New(Args &&... args) {
       auto e = mem::New<E>(cbn::meta::Forward<Args>(args)...);
       m_Entities[L].Push(e);
       return *e;
@@ -249,7 +249,7 @@ namespace gph {
     template <ValidEntity E, RenderLayer::T L, typename... Args>
     requires RenderLayer::Valid<L>
     E &NewEntity(Args &&... args) {
-      return m_Pool.Push<E, L>(cbn::meta::Forward<Args>(args)...);
+      return m_Pool.New<E, L>(cbn::meta::Forward<Args>(args)...);
     }
 
     template <ValidEntity E>
@@ -486,7 +486,7 @@ namespace gph {
     template <ValidEntity E, RenderLayer::T L, typename... Args>
     requires RenderLayer::Valid<L>
     E &NewEntity(Args &&... args) {
-      return m_GlobalPool.Push<E, L>(cbn::meta::Forward<Args>(args)...);
+      return m_GlobalPool.New<E, L>(cbn::meta::Forward<Args>(args)...);
     }
 
     template <ValidScene S>
