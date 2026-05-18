@@ -486,7 +486,7 @@ namespace gph {
     template <ValidEntity E, RenderLayer::T L, typename... Args>
     requires RenderLayer::Valid<L>
     E &NewEntity(Args &&... args) {
-      return m_GlobalPool.Push<E, L>(args...);
+      return m_GlobalPool.Push<E, L>(cbn::meta::Forward<Args>(args)...);
     }
 
     template <ValidScene S>
