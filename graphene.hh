@@ -449,6 +449,7 @@ namespace gph {
 
     void Update(const f64 dt) {
       m_FrameTime = dt;
+      m_RunTime += dt;
       if (cbn::win::GetKeyDown(cbn::win::KeyCode::F3)) {
         m_Visible ^= true;
       }
@@ -469,7 +470,9 @@ namespace gph {
         cbn::str::fmt("Scenes in stack: %zu", r_SceneMgr.Count()),
         cbn::str::fmt("Scene entities: %zu", r_SceneMgr.CurrentSceneEntityCount()),
         cbn::str::fmt("Global entities: %zu", r_GlobalPool.Count()),
-        cbn::str::fmt("Memory usage: %.2f MiB", (f64)cbn::mem::Usage()/(1<<20))
+        cbn::str::fmt("Memory usage: %.2f MiB", (f64)cbn::mem::Usage()/(1<<20)),
+        cbn::str::fmt("Run time: %02llu:%02llu:%05.2f",
+                      (u64)m_RunTime/3600, ((u64)m_RunTime % 3600)/60, cbn::math::Fmod(m_RunTime, 60))
       };
       for (usz i = 0; i < CARBON_ARRAY_LEN(txt); ++i) {
         r_Canvas.DrawText(txt[i], cbn::math::Vec2(10, 10 + i*txt_h), txt_sz, txt_clr);
@@ -479,6 +482,7 @@ namespace gph {
   private:
     bool m_Visible {false};
     f64 m_FrameTime;
+    f64 m_RunTime;
     cbn::DrawCanvas &r_Canvas;
     const SceneManager &r_SceneMgr;
     const EntityPool &r_GlobalPool;
