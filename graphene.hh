@@ -432,6 +432,10 @@ namespace gph {
     cbn::mesh_mgr::UID LoadMesh(const char *name) const {
       return LoadAsset(&cbn::SKAP::LoadMesh, name);
     }
+
+    cbn::Font LoadFont(const char *name) const {
+      return LoadAsset(&cbn::SKAP::Lookup<cbn::Font>, name);
+    }
   };
 
   /**
