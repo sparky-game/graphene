@@ -436,6 +436,10 @@ namespace gph {
     cbn::Font LoadFont(const char *name) const {
       return LoadAsset(&cbn::SKAP::Lookup<cbn::Font>, name);
     }
+
+    cbn::audio::UID LoadAudio(const char *name) const {
+      return LoadAsset(&cbn::SKAP::LoadAudio, name);
+    }
   };
 
   /**
