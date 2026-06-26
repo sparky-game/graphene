@@ -468,6 +468,7 @@ namespace gph {
       static constexpr auto txt_clr = 0x737373ff;
       static constexpr auto txt_sz = 2;
       static const auto txt_h = r_Canvas.TextHeight(txt_sz);
+      static const auto backface_culling = r_Canvas.Flags() & CARBON_DRAWCANVAS_FLAG_BACKFACE_CULLING ? "YES" : "NO";
       const char *txt[] {
         "Engine (" GPH_LIBNAME ") " GPH_VERSION_STR,
         cbn::str::fmt("Core (" CARBON_LIBNAME ") %s", cbn::VersionStr()),
@@ -475,6 +476,8 @@ namespace gph {
         cbn::str::fmt("%u fps (%.4f ms)", cbn::win::GetFPS(), m_FrameTime),
         cbn::str::fmt("Canvas resolution: %zux%zu", r_Canvas.Width(), r_Canvas.Height()),
         cbn::str::fmt("Window resolution: %zux%zu", cbn::win::Width(), cbn::win::Height()),
+        "Rendering options:",
+        cbn::str::fmt("  - Back-face culling: %s", backface_culling),
         cbn::str::fmt("Scenes in stack: %zu", r_SceneMgr.Count()),
         cbn::str::fmt("Scene entities: %zu", r_SceneMgr.CurrentSceneEntityCount()),
         cbn::str::fmt("Global entities: %zu", r_GlobalPool.Count()),
@@ -503,6 +506,7 @@ namespace gph {
     struct Spec final {
       usz width {960}, height {540};
       const char *title {"Le Game™"};
+      bool backface_culling {false};
     };
 
     explicit Game(const Spec &s)
@@ -510,6 +514,7 @@ namespace gph {
         m_SceneMgr{m_GlobalPool},
         m_DebugScr{*m_Canvas, m_SceneMgr, m_GlobalPool}
     {
+      if (s.backface_culling) m_Canvas->FlagsEnable(CARBON_DRAWCANVAS_FLAG_BACKFACE_CULLING);
       m_Canvas->OpenWindow(s.title);
     }
 
