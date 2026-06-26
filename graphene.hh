@@ -42,6 +42,12 @@
   ----------
   (...)
 
+  Properties:
+  - IsOpaque :: It defaults to true. If false, enables transparency blending and forces the
+  renderer to look down the stack until the next opaque scene.
+
+  (...)
+
   3.2.1. Callback execution lifecycle
   -----------------------------------
   (...)
@@ -228,6 +234,8 @@ namespace gph {
    * @brief ...
    */
   struct Scene {
+    friend SceneManager;
+
     explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, EntityPool &gp)
       : r_Canvas{dc}, r_SceneMgr{s_mgr}, r_GlobalPool{gp}
     {}
@@ -262,6 +270,8 @@ namespace gph {
   protected:
     cbn::DrawCanvas &r_Canvas;
     SceneManager &r_SceneMgr;
+
+    bool IsOpaque {true};
 
     template <ValidEntity E, RenderLayer::T L, typename... Args>
     requires RenderLayer::Valid<L>
@@ -347,7 +357,14 @@ namespace gph {
     }
 
     void Render(void) const {
-      if (m_Scenes.size) m_Scenes.Back()->RenderAll();
+      usz start = 0;
+      for (isz i = m_Scenes.size - 1; i >= 0; --i) {
+        if (m_Scenes[i]->IsOpaque) {
+          start = i;
+          break;
+        }
+      }
+      for (usz i = start; i < m_Scenes.size; ++i) m_Scenes[i]->RenderAll();
     }
 
   private:
