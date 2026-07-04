@@ -313,8 +313,8 @@ namespace gph {
    * @brief ...
    */
   struct SceneManager final {
-    explicit SceneManager(EntityPool &gp)
-      : r_GlobalPool{gp}
+    explicit SceneManager(cbn::DrawCanvas &dc, EntityPool &gp)
+      : r_Canvas{dc}, r_GlobalPool{gp}
     {}
 
     SceneManager(const SceneManager &) = delete;
@@ -332,16 +332,16 @@ namespace gph {
     }
 
     template <ValidScene S>
-    void Switch(cbn::DrawCanvas &dc) {
+    void Switch(void) {
       m_PendingSwitch = [&]{
         Drain();
-        Push<S>(dc);
+        Push<S>();
       };
     }
 
-    template <ValidScene S>
-    void Push(cbn::DrawCanvas &dc) {
-      auto s = mem::New<S>(dc, *this, r_GlobalPool);
+    template <ValidScene S, typename... Args>
+    void Push(Args &&... args) {
+      auto s = mem::New<S>(Scene::Spec{r_Canvas, *this, r_GlobalPool}, cbn::meta::Forward<Args>(args)...);
       if (m_Scenes.size) m_Scenes.Back()->Snooze();
       m_Scenes.Push(s);
       s->Born(), s->Awake();
@@ -371,6 +371,7 @@ namespace gph {
     cbn::List<Scene *> m_Scenes;
     bool m_PendingPop {false};
     cbn::Func<void()> m_PendingSwitch;
+    cbn::DrawCanvas &r_Canvas;
     EntityPool &r_GlobalPool;
 
     void Drain(void) { while (m_Scenes.size) PopNow(); }
@@ -528,7 +529,7 @@ namespace gph {
 
     explicit Game(const Spec &s)
       : m_Canvas{cbn::DrawCanvas::New(s.width, s.height)},
-        m_SceneMgr{m_GlobalPool},
+        m_SceneMgr{*m_Canvas, m_GlobalPool},
         m_DebugScr{*m_Canvas, m_SceneMgr, m_GlobalPool}
     {
       if (s.backface_culling) m_Canvas->FlagsEnable(CARBON_DRAWCANVAS_FLAG_BACKFACE_CULLING);
@@ -552,7 +553,7 @@ namespace gph {
 
     template <ValidScene S>
     void InitScene(void) {
-      m_SceneMgr.Switch<S>(*m_Canvas);
+      m_SceneMgr.Switch<S>();
     }
 
     void Run(void) {
