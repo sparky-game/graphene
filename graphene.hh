@@ -236,8 +236,14 @@ namespace gph {
   struct Scene {
     friend SceneManager;
 
-    explicit Scene(cbn::DrawCanvas &dc, SceneManager &s_mgr, EntityPool &gp)
-      : r_Canvas{dc}, r_SceneMgr{s_mgr}, r_GlobalPool{gp}
+    struct Spec final {
+      cbn::DrawCanvas &dc;
+      SceneManager &s_mgr;
+      EntityPool &gp;
+    };
+
+    explicit Scene(const Spec &s)
+      : r_Canvas{s.dc}, r_SceneMgr{s.s_mgr}, r_GlobalPool{s.gp}
     {}
 
     Scene(const Scene &) = delete;
