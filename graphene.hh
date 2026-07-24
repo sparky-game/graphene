@@ -88,6 +88,11 @@
 #define GPH_VERSION_PATCH 0
 #define GPH_VERSION_EXTRA "-alpha.1"
 
+#include <carbon.h>
+#if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != 18
+#error Carbon v0.18.Z is needed
+#endif
+
 /**
  * @brief Library printable name.
  */
@@ -111,13 +116,11 @@
   GPH_VERSION_EXTRA
 #endif
 
+/**
+ * @brief Default value for GPH_ASSETPACK macro.
+ */
 #ifndef GPH_ASSETPACK
 #define GPH_ASSETPACK "Assets.skap"
-#endif
-
-#include <carbon.h>
-#if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != 18
-#error Carbon v0.18.Z is needed
 #endif
 
 namespace gph {
