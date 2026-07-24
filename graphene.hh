@@ -90,18 +90,17 @@
 
 #define GPH_VERSION_STR "0.1-dev"
 
+#ifndef GPH_ASSETPACK
+#define GPH_ASSETPACK "Assets.skap"
+#endif
+
 #include <carbon.h>
 // #if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != Y
 // #error Carbon v0.Y is needed
 // #endif
 
-#ifndef GPH_ASSETPACK
-#define GPH_ASSETPACK "Assets.skap"
-#endif
-
 namespace gph {
-  // Forward declarations
-  struct SceneManager;
+  struct SceneManager;  // Forward declaration
 
   namespace mem {
     template <typename T, typename... Args>
