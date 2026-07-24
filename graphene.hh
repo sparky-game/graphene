@@ -91,9 +91,9 @@
 #define GPH_VERSION_STR "0.1-dev"
 
 #include <carbon.h>
-#if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != 18
-#error Carbon v0.18 is needed
-#endif
+// #if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != Y
+// #error Carbon v0.Y is needed
+// #endif
 
 #ifndef GPH_ASSETPACK
 #define GPH_ASSETPACK "Assets.skap"
