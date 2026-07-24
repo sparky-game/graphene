@@ -1,6 +1,6 @@
 /*
   Game engine C++ header-only library @ MIT. See license statements at the end of this file.
-  graphene - v1.0-alpha.1 - 2026-07-24
+  graphene - v1.0-alpha.2 - 2026-07-24
 
   Wasym Atieh Alonso - wasymatieh01@gmail.com
 
@@ -86,7 +86,7 @@
 #define GPH_VERSION_MAJOR 1
 #define GPH_VERSION_MINOR 0
 #define GPH_VERSION_PATCH 0
-#define GPH_VERSION_EXTRA "-alpha.1"
+#define GPH_VERSION_EXTRA "-alpha.2"
 
 #include <carbon.h>
 #if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != 18
