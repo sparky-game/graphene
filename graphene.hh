@@ -4,7 +4,7 @@
 
   Wasym Atieh Alonso - wasymatieh01@gmail.com
 
-  Website: https://sparky-game.org/software/graphene
+  Website: https://sparky-game.github.io/website/software/graphene
   GitHub:  https://github.com/sparky-game/graphene
 */
 
