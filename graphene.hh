@@ -1,6 +1,6 @@
 /*
-  Game engine C++ header-only library. MIT. See license statements at the end of this file.
-  graphene - v0.1-dev - 2026-04-20
+  Game engine C++ header-only library @ MIT. See license statements at the end of this file.
+  graphene - v1.0-alpha.1 - 2026-07-24
 
   Wasym Atieh Alonso - wasymatieh01@gmail.com
 
@@ -83,21 +83,42 @@
 
 #pragma once
 
+#define GPH_VERSION_MAJOR 1
+#define GPH_VERSION_MINOR 0
+#define GPH_VERSION_PATCH 0
+#define GPH_VERSION_EXTRA "-alpha.1"
+
 /**
  * @brief Library printable name.
  */
 #define GPH_LIBNAME "SPARKY Graphene"
 
-#define GPH_VERSION_STR "0.1-dev"
+/**
+ * @brief Version check and string creation.
+ */
+#if !defined(GPH_VERSION_MAJOR) || CARBON_MACRO_IS_EMPTY(GPH_VERSION_MAJOR) || !defined(GPH_VERSION_MINOR) || CARBON_MACRO_IS_EMPTY(GPH_VERSION_MINOR) || !defined(GPH_VERSION_PATCH) || CARBON_MACRO_IS_EMPTY(GPH_VERSION_PATCH) || !defined(GPH_VERSION_EXTRA)
+#error Version information not valid
+#elif GPH_VERSION_PATCH != 0
+#define GPH_VERSION_STR                         \
+  CARBON_QUOTE(GPH_VERSION_MAJOR) "."           \
+  CARBON_QUOTE(GPH_VERSION_MINOR) "."           \
+  CARBON_QUOTE(GPH_VERSION_PATCH)               \
+  GPH_VERSION_EXTRA
+#elif GPH_VERSION_PATCH == 0
+#define GPH_VERSION_STR                         \
+  CARBON_QUOTE(GPH_VERSION_MAJOR) "."           \
+  CARBON_QUOTE(GPH_VERSION_MINOR)               \
+  GPH_VERSION_EXTRA
+#endif
 
 #ifndef GPH_ASSETPACK
 #define GPH_ASSETPACK "Assets.skap"
 #endif
 
 #include <carbon.h>
-// #if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != Y
-// #error Carbon v0.Y is needed
-// #endif
+#if CARBON_VERSION_MAJOR != 0 || CARBON_VERSION_MINOR != 18
+#error Carbon v0.18.Z is needed
+#endif
 
 namespace gph {
   struct SceneManager;  // Forward declaration
