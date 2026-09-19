@@ -516,6 +516,7 @@ namespace gph {
       static constexpr auto txt_sz = 2;
       static const auto txt_h = r_Canvas.TextHeight(txt_sz);
       static const auto backface_culling = r_Canvas.Flags() & CARBON_DRAWCANVAS_FLAG_BACKFACE_CULLING ? "YES" : "NO";
+      static const auto frustum_culling = r_Canvas.Flags() & CARBON_DRAWCANVAS_FLAG_FRUSTUM_CULLING ? "YES" : "NO";
       const char *txt[] {
         "Engine (" GPH_LIBNAME ") " GPH_VERSION_STR,
         cbn::str::fmt("Core (" CARBON_LIBNAME ") %s", cbn::VersionStr()),
@@ -525,6 +526,7 @@ namespace gph {
         cbn::str::fmt("Window resolution: %zux%zu", cbn::win::Width(), cbn::win::Height()),
         "Rendering options:",
         cbn::str::fmt("  - Back-face culling: %s", backface_culling),
+        cbn::str::fmt("  - Frustum culling: %s", frustum_culling),
         cbn::str::fmt("Scenes in stack: %zu", r_SceneMgr.Count()),
         cbn::str::fmt("Scene entities: %zu", r_SceneMgr.CurrentSceneEntityCount()),
         cbn::str::fmt("Global entities: %zu", r_GlobalPool.Count()),
@@ -552,8 +554,9 @@ namespace gph {
   struct Game final {
     struct Spec final {
       usz width {960}, height {540};
-      const char *title {"Le Game™"};
+      const char *title {"Le Game"};
       bool backface_culling {false};
+      bool frustum_culling {false};
     };
 
     explicit Game(const Spec &s)
@@ -562,6 +565,7 @@ namespace gph {
         m_DebugScr{*m_Canvas, m_SceneMgr, m_GlobalPool}
     {
       if (s.backface_culling) m_Canvas->FlagsEnable(CARBON_DRAWCANVAS_FLAG_BACKFACE_CULLING);
+      if (s.frustum_culling) m_Canvas->FlagsEnable(CARBON_DRAWCANVAS_FLAG_FRUSTUM_CULLING);
       m_Canvas->OpenWindow(s.title);
     }
 
