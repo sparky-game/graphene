@@ -1,0 +1,28 @@
+#+AUTHOR: Wasym A. Alonso
+
+# Cover
+#+begin_html
+<p align="center">
+<img src="./cover.png" alt="Cover">
+</p>
+#+end_html
+
+# Badges
+#+begin_html
+<p align="center">
+<img src="https://img.shields.io/github/license/sparky-game/graphene?color=coral" alt="License">
+<img src="https://img.shields.io/badge/C++-20-violet" alt="C++ Standard">
+<img src="https://img.shields.io/github/v/tag/sparky-game/graphene?color=slateblue" alt="Latest Git Tag">
+</p>
+#+end_html
+
+#+begin_quote
+[!WARNING]
+~Graphene~ is currently in an *alpha* quality stage, and is not production-ready yet.
+#+end_quote
+
+* Licensing
+
+/Graphene/ is licensed under the *MIT* license. You are free to use it in any project, commercial or otherwise.
+
+/Graphene/ relies on [[https://github.com/sparky-game/carbon][/Carbon/]] for low-level and all backend functionality, which is licensed under GNU's *AGPL-3.0-only*, with also the possibility to purchase a *commercial license*. Thus, while /Graphene/ itself is permissive, linking against /Carbon/ will govern the licensing requirements of your final executable. Please, ensure you comply with /Carbon/'s licensing terms.
