@@ -25,4 +25,4 @@
 
 /Graphene/ is licensed under the *MIT* license. You are free to use it in any project, commercial or otherwise.
 
-/Graphene/ relies on [[https://github.com/sparky-game/carbon][/Carbon/]] for low-level and all backend functionality, which is licensed under GNU's *AGPL-3.0-only*, with also the possibility to purchase a *commercial license*. Thus, while /Graphene/ itself is permissive, linking against /Carbon/ will govern the licensing requirements of your final executable. Please, ensure you comply with /Carbon/'s licensing terms.
+/Graphene/ relies on /[[https://github.com/sparky-game/carbon][Carbon]]/ for low-level and all backend functionality, which is licensed under GNU's *AGPL-3.0-only*, with also the possibility to purchase a *commercial license*. Thus, while /Graphene/ itself is permissive, linking against /Carbon/ will govern the licensing requirements of your final executable. Please, ensure you comply with /Carbon/'s licensing terms.
