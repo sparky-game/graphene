@@ -16,13 +16,50 @@
 </p>
 #+end_html
 
+~Graphene~ (/[[https://en.wikipedia.org/wiki/Help:IPA/English][\slash{}ˈɡræf.iːn\slash{}]]/) is a lightweight header-only C++ game framework built on /[[https://github.com/sparky-game/carbon][Carbon]]/. @@html:<br>@@
+It provides high-level abstractions for entity and scene-stack management, asset loading, and debugging, while /Carbon/ supplies the underlying rendering, windowing, audio, and other low-level functionality.
+
+-----
+
+Do you want to support ~Graphene~? Consider becoming a [[https://github.com/sponsors/iWas-Coder][sponsor]], or making a donation via [[https://ko-fi.com/iwas_coder][Ko-fi]] or [[https://buymeacoffee.com/iwas.coder][Buy Me a Coffee]].
+Many thanks to *all of you* who are reading this; I hope it'll be useful and it'll make you *enjoy programming* a little bit more.
+
 #+begin_quote
 [!WARNING]
 ~Graphene~ is currently in an *alpha* quality stage, and is not production-ready yet.
 #+end_quote
 
+* Usage
+
+The following example demonstrates how to define a scene, initialize the game, and start its main loop:
+
+#+begin_src cpp
+  #include <graphene.hh>
+
+  struct Main final : gph::Scene {
+    using gph::Scene::Scene;
+
+    virtual void Render(void) const override {
+      r_Canvas.DrawText("Hello, Graphene!", {50, 25}, 2, 0xffffffff);
+    }
+  };
+
+  int main(void) {
+    gph::Game::Spec spec {
+      .title = "Graphene Example",
+    };
+    gph::Game game {spec};
+    game.InitScene<Main>();
+    game.Run();
+  }
+#+end_src
+
+For more detailed explanations of /Graphene/'s concepts, configuration options, API, and scene lifetime, refer to the source file itself (~graphene.hh~), which is always the most up-to-date and authoritative source of information on how to use the library.
+
 * Licensing
 
-/Graphene/ is licensed under the *MIT* license. You are free to use it in any project, commercial or otherwise.
+/Graphene/ is licensed under the *MIT* license.
 
-/Graphene/ relies on /[[https://github.com/sparky-game/carbon][Carbon]]/ for low-level and all backend functionality, which is licensed under GNU's *AGPL-3.0-only*, with also the possibility to purchase a *commercial license*. Thus, while /Graphene/ itself is permissive, linking against /Carbon/ will govern the licensing requirements of your final executable. Please, ensure you comply with /Carbon/'s licensing terms.
+/Graphene/ relies on /Carbon/ for its underlying functionality, which is licensed under GNU's *AGPL-3.0-only*, with a separate *commercial* licensing option.
+
+The *MIT* license applies to /Graphene/'s own code and does not change the licensing terms applicable to /Carbon/. Thus, while /Graphene/ itself is permissive, linking against /Carbon/ will govern the licensing requirements of your final executable. Applications using /Graphene/ together with /Carbon/ must comply with the applicable /Carbon/ license. Please refer to /Carbon/'s repository for licensing details.
