@@ -461,8 +461,8 @@ namespace gph {
       m_AssetPack->Free();
     }
 
-    auto LoadAsset(auto load, const char *name) const {
-      auto s = ((*m_AssetPack).*load)(name);
+    auto LoadAsset(auto load, auto &&... args) const {
+      auto s = ((*m_AssetPack).*load)(cbn::meta::Forward<typeof(args)>(args)...);
       if (!s) CARBON_UNREACHABLE;
       return *s;
     }
@@ -484,8 +484,8 @@ namespace gph {
       return LoadAsset(&cbn::SKAP::Lookup<cbn::Font>, name);
     }
 
-    cbn::audio::UID LoadAudio(const char *name) const {
-      return LoadAsset(&cbn::SKAP::LoadAudio, name);
+    cbn::audio::UID LoadAudio(const char *name, const cbn::audio::GID *gid = nullptr) const {
+      return LoadAsset(&cbn::SKAP::LoadAudio, name, gid);
     }
   };
 
